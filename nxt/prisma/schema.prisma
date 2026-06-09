@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               Int           @id @default(autoincrement())
+  name             String?
+  email            String?       @unique
+  password         String?
+  role             String?       @default("ROLE_USER")
+  address          String?
+  orders           Order[]
+  reviews          Review[]
+  sentMessages     ChatMessage[] @relation("SentMessages")
+  receivedMessages ChatMessage[] @relation("ReceivedMessages")
+
+  @@map("users")
+}
+
+model Product {
+  id                 Int         @id @default(autoincrement())
+  name               String?
+  description        String?
+  price              Float
+  imageUrl           String?     @map("image_url") @db.Text
+  stock              Int
+  category           String?
+  discountPercentage Int         @map("discount_percentage")
+  type               ProductType?
+  orderItems         OrderItem[]
+  reviews            Review[]
+
+  @@map("products")
+}
+
+enum ProductType {
+  NECKLACE
+  GOLD_CHAIN
+  FINGER_RING
+  EARRING
+  ANKLET
+  BANGLE
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  user        User?       @relation(fields: [userId], references: [id])
+  userId      Int?        @map("user_id")
+  items       OrderItem[]
+  totalAmount Float       @map("total_amount")
+  status      String?     @default("PENDING")
+  orderDate   DateTime?   @default(now()) @map("order_date")
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  order     Order?   @relation(fields: [orderId], references: [id])
+  orderId   Int?     @map("order_id")
+  product   Product? @relation(fields: [productId], references: [id])
+  productId Int?     @map("product_id")
+  quantity  Int
+  price     Float
+
+  @@map("order_items")
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  product   Product? @relation(fields: [productId], references: [id])
+  productId Int?     @map("product_id")
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    Int?     @map("user_id")
+  rating    Int
+  comment   String?
+
+  @@map("reviews")
+}
+
+model ChatMessage {
+  id         Int       @id @default(autoincrement())
+  sender     User?     @relation("SentMessages", fields: [senderId], references: [id])
+  senderId   Int?      @map("sender_id")
+  receiver   User?     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  receiverId Int?      @map("receiver_id")
+  content    String?   @db.Text
+  timestamp  DateTime? @default(now())
+  isRead     Boolean   @default(false) @map("is_read")
+
+  @@map("chat_messages")
+}

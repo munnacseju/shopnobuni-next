@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "build": "prisma generate && prisma migrate deploy --url ${DATABASE_URL_UNPOOLED:-$POSTGRES_URL_NON_POOLING} && next build",
     "start": "next start",
     "lint": "eslint"
   },
